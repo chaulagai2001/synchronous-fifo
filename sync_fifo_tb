@@ -1,1 +1,92 @@
+-- 
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity sync_fifo_tb is
+--  Port ( );
+end sync_fifo_tb;
+
+architecture Behavioral of sync_fifo_tb is
+component sync_fifo is  
+generic(W: natural:=8;
+            D: natural:=16;
+           B: natural:=8);           
+ Port ( clk : in STD_LOGIC;
+           reset : in STD_LOGIC;
+           wren : in STD_LOGIC;
+           rden : in STD_LOGIC;
+           full : out STD_LOGIC;
+           empty : out STD_LOGIC;
+           datawr : in STD_LOGIC_VECTOR (B-1 downto 0);
+           datard : out STD_LOGIC_VECTOR (B-1 downto 0));
+end component;
+
+--tester signals
+signal enlate: std_logic;
+signal reg: std_logic_vector(7 downto 0);
+
+--input signals
+signal clk,reset: std_logic;
+signal wren,rden: std_logic;
+signal datawr: std_logic_vector(7 downto 0);
+
+--output signals
+signal full,empty: std_logic;
+signal datard: std_logic_vector(7 downto 0);
+--clock period
+constant clk_period: time:= 10ns;
+begin
+ uut: sync_fifo PORT MAP (
+          reset => reset,
+          clk => clk,
+          rden => rden,
+          wren => wren,
+          empty=> empty,
+          full => full,
+          datard => datard,
+          datawr => datawr
+        );
+
+clock_process: process
+begin
+        clk <= '0';
+        wait for clk_period/2;
+        clk <= '1';
+        wait for clk_period/2;
+end process;
+
+ stim_proc: process
+   begin        
+      -- hold reset state for 100 ns.
+        reset <= '1';
+      wait for 100 ns;  
+        reset <= '0';
+      wait for clk_period*10;
+        dataWr <= "00000000";
+        wren <= '1';
+        wait for clk_period;
+        dataWr <= "00001010";
+        wait for clk_period;
+        dataWr <= "00000011";
+        wait for clk_period;
+        dataWr <= "00110101";
+        wait for clk_period;
+        dataWr <= "01010101";
+        wait for clk_period;
+        wren <= '0';
+      wait for clk_period*10;  
+       
+      wait;
+   end process;
+  --process(clk)
+    --    begin
+      ---  if rising_edge(clk) then
+         --   enLate <= not empty;
+           -- if enLate = '1' then
+             --   reg <= dataRd;
+            --end if;
+        --end if;
+    --end process;
+end Behavioral;
 
