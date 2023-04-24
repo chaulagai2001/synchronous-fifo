@@ -1,1 +1,85 @@
 
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use ieee.std_logic_unsigned.all;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity sync_fifo is
+   generic(W: natural:=8;
+            D: natural:=16;
+           B: natural:=8);           
+    Port ( clk : in STD_LOGIC;
+           reset : in STD_LOGIC;
+           wren : in STD_LOGIC;
+           rden : in STD_LOGIC;
+           full : out STD_LOGIC;
+           empty : out STD_LOGIC;
+           datawr : in STD_LOGIC_VECTOR (B-1 downto 0);
+           datard : out STD_LOGIC_VECTOR (B-1 downto 0));
+end sync_fifo;
+
+architecture Behavioral of sync_fifo is
+signal fullw,emptyw: std_logic;
+signal wrptr,rdptr: std_logic_vector(W-1 downto 0);
+type fifo_type is array (D-1 downto 0) of std_logic_vector(W-1 downto 0);
+signal fifo: fifo_type;
+begin
+--write side logic
+write_side: process(clk,reset)
+begin
+if rising_edge(clk)then
+  if reset='1' then
+     wrptr<=(others=>'0');
+  elsif wren='1' and not fullw='1' then
+     wrptr<=wrptr+1;
+  if wrptr=D-1 then
+     wrptr<=(others=>'0');
+  end if;
+end if;
+end if;
+end process ;
+
+fullw<='1' when wrptr+'1'=rdptr  else '0';
+full<=fullw;
+--read side logic
+read_side: process(clk,reset)
+begin
+if rising_edge(clk)then
+  if reset='1' then
+     rdptr<=(others=>'0');
+  elsif rden='1' and not emptyw='1' then
+     rdptr<=rdptr+1;
+  if rdptr=D-1 then
+     rdptr<=(others=>'0');
+  end if;
+end if;
+end if;
+end process ;
+ emptyw <= '1' when rdPtr = wrPtr else '0';
+ empty <= emptyw;
+--writing logic in the RAM
+fifo_write: process (clk)
+begin
+if rising_edge (clk) then 
+ if wren='1' and not fullw='1' then
+ fifo (conv_integer(wrptr))<=datawr;
+ end if;
+ end if;
+ end process;
+ 
+ --reading data from RAM
+ fifo_rd: process (clk)
+ begin
+ if rising_edge (clk) then
+ if rden='1' and not emptyw='1' then
+ datard<=fifo(conv_integer(rdptr));
+ end if;
+ end if;
+ end process; 
+end Behavioral;
+
